@@ -1,4 +1,4 @@
-export const appName = 'hpsetup';
+export const appName = 'CollectUI';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
