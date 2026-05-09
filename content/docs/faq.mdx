@@ -1,0 +1,42 @@
+---
+title: 常见问题
+description: 使用 hpsetup 过程中的常见问题及解决方案。
+---
+
+## pnpm + Vite 报错 "does not provide an export named 'jsx'"
+
+这是 pnpm 严格模块解析与 Vite 预构建机制的兼容性问题，与安装方式无关。在 `vite.config.ts` 中添加：
+
+```ts
+export default defineConfig({
+  optimizeDeps: {
+    include: ["react", "react/jsx-runtime", "@heroui-pro/react"],
+  },
+});
+```
+
+## 支持哪些包管理器？
+
+npm、pnpm、yarn、bun 均支持。hpsetup 会自动检测你项目使用的包管理器。
+
+## 支持哪些操作系统？
+
+macOS、Linux、Windows（PowerShell / cmd / Git Bash）。
+
+## 如何指定安装版本？
+
+```bash
+npx -y hpsetup@latest <key> 1.0.0-beta.2
+```
+
+## Key 可以用在 CI/CD 中吗？
+
+可以。设置环境变量即可：
+
+```bash
+HEROUI_KEY=hp_xxx npx -y hpsetup@latest
+```
+
+## hpsetup 和官方安装有什么区别？
+
+**安装结果完全一致。** 官方 CLI 通过 GitHub OAuth 登录后从 CDN 下载组件，hpsetup 通过代理完成同样的下载过程。最终写入 `node_modules/@heroui-pro/react/` 的文件完全相同——组件代码、样式、类型定义没有任何区别。
