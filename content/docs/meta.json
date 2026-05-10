@@ -1,4 +1,4 @@
 {
   "title": "文档",
-  "pages": ["index", "getting-started", "faq", "heroui-native-guide", "heroui-native-pro-guide"]
+  "pages": ["heroui-native-guide", "heroui-native-pro-guide"]
 }
