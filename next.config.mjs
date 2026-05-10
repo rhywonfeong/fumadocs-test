@@ -6,6 +6,15 @@ const withMDX = createMDX();
 const config = {
   serverExternalPackages: ['@takumi-rs/image-response'],
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'image-bed-1315938829.cos.ap-nanjing.myqcloud.com',
+      },
+    ],
+    unoptimized: true,
+  },
 };
 
 export default withMDX(config);

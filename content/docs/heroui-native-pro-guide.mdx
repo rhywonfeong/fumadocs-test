@@ -1,0 +1,214 @@
+---
+title: HeroUI Native Pro
+description: 在 HeroUI Native 项目中安装和配置 heroui-native-pro
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
+import { Suspense } from 'react';
+import { HpInstallCommand } from '@/components/hp-install-command';
+
+<Callout type="info">
+本指南基于已完成的 [HeroUI Native 项目初始化](/docs/heroui-native-guide)，请先完成基础项目搭建。
+</Callout>
+
+## 安装
+
+以交互模式安装 heroui-native-pro（完整版）：
+
+<Suspense>
+  <HpInstallCommand />
+</Suspense>
+
+<Callout type="info">
+在开始之前，可以先初始化 git 并提交，方便查看安装后的具体变更。
+</Callout>
+
+安装过程会自动处理 react-native 依赖。如果本地已有缓存（`~/.heroui/cache/react-native/{version}`），会从缓存获取；否则从 CDN 下载后缓存。之后再安装时，同一版本会直接走本地缓存，除非手动清除。
+
+![heroui-native-pro 安装过程](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510020113074.png)
+
+## 配置
+
+安装完成后，需要在全局样式中导入 Pro 的样式和组件源。
+
+### 导入 Pro 样式
+
+在 `global.css` 中添加 heroui-native-pro 的样式导入和组件源扫描：
+
+```css title="global.css"
+@import 'tailwindcss';
+@import 'uniwind';
+
+@import 'heroui-native/styles';
+@import 'heroui-native-pro/styles';
+
+@source './node_modules/heroui-native/lib';
+@source './node_modules/heroui-native-pro/lib';
+```
+
+<Callout type="warn">
+`@source` 路径是相对于 `global.css` 文件而言的。如果 `global.css` 不在项目根目录（例如在 `app/` 中），路径应调整为 `../node_modules/heroui-native-pro/lib`。
+</Callout>
+
+## 使用
+
+<Steps>
+<Step>
+
+### 创建 Pro 组件
+
+在 `components` 目录下创建一个组件文件来使用 Pro 组件：
+
+<Files>
+  <Folder name="src" defaultOpen>
+    <Folder name="components">
+      <File name="my-component.tsx" />
+    </Folder>
+  </Folder>
+</Files>
+
+```tsx title="src/components/my-component.tsx"
+import { Stepper } from 'heroui-native-pro';
+import { View } from 'react-native';
+
+export default function MyComponent() {
+  return (
+    <View className="flex-1 justify-center bg-background p-4">
+      <Stepper>
+        <Stepper.Step>
+          <Stepper.Rail />
+          <Stepper.Content>
+            <Stepper.Title>Account</Stepper.Title>
+            <Stepper.Description>Create your account</Stepper.Description>
+          </Stepper.Content>
+        </Stepper.Step>
+        <Stepper.Step>
+          <Stepper.Rail />
+          <Stepper.Content>
+            <Stepper.Title>Profile</Stepper.Title>
+            <Stepper.Description>Set up your profile</Stepper.Description>
+          </Stepper.Content>
+        </Stepper.Step>
+      </Stepper>
+    </View>
+  );
+}
+```
+
+</Step>
+<Step>
+
+### 替换首页内容
+
+在首页（路径因项目组织方式而异，通常为 `src/app/(home)/index.tsx`）中导入并使用该组件：
+
+![替换首页 View 部分](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510121838448.png)
+
+```tsx title="src/app/(home)/index.tsx"
+import MyComponent from '@/src/components/my-component';
+
+// 在 ScreenScrollView 中替换 View 部分
+<MyComponent />
+```
+
+</Step>
+<Step>
+
+### 预览验证
+
+启动项目进行预览：
+
+<Tabs items={['pnpm', 'bun', 'npm']} defaultValue="pnpm">
+  <Tab value="pnpm">
+
+```bash
+pnpm run start
+```
+
+  </Tab>
+  <Tab value="bun">
+
+```bash
+bun run start
+```
+
+  </Tab>
+  <Tab value="npm">
+
+```bash
+npm run start
+```
+
+  </Tab>
+</Tabs>
+
+<img
+  src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510122334534.png"
+  alt="Stepper 组件预览效果"
+  width="320"
+/>
+
+</Step>
+</Steps>
+
+## 更新模板
+
+安装完成后，可以将当前项目更新为模板（会覆盖原有模板），下次直接使用：
+
+<Tabs groupId="p-tp" items={['tp', 'template', 'templates']}>
+  <Tab value="tp">
+
+```bash
+p tp update .
+```
+
+  </Tab>
+  <Tab value="template">
+
+```bash
+p template update .
+```
+
+  </Tab>
+  <Tab value="templates">
+
+```bash
+p templates update .
+```
+
+  </Tab>
+</Tabs>
+
+![更新模板](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510164210559.png)
+
+## 发布到远程
+
+也可以将模板发布到远程，分享给其他人 clone 使用：
+
+<Tabs groupId="p-tp" items={['tp', 'template', 'templates']}>
+  <Tab value="tp">
+
+```bash
+p tp publish .
+```
+
+  </Tab>
+  <Tab value="template">
+
+```bash
+p template publish .
+```
+
+  </Tab>
+  <Tab value="templates">
+
+```bash
+p templates publish .
+```
+
+  </Tab>
+</Tabs>
+
+![发布模板到远程](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510174539525.png)

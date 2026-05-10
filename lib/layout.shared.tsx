@@ -5,6 +5,7 @@ import { appName, gitConfig } from './shared';
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
+      url: '',
       title: (
         <>
           <Image src="/logo.png" alt={appName} width={28} height={28} className="rounded-full" unoptimized />

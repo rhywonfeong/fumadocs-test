@@ -1,0 +1,203 @@
+---
+title: HeroUI Native
+description: 初始化一个 HeroUI Native 项目
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+使用 [p cli](https://github.com/ru-yaka/p)，克隆项目到 projects 目录下，然后自动用 IDE 打开。
+
+<Steps>
+<Step>
+
+### 安装 p
+
+确保提前安装 p：
+
+```bash
+bun install -g ru-yaka/p
+```
+
+</Step>
+<Step>
+
+### 克隆项目
+
+在任意终端运行：
+
+<Tabs items={['clone', 'cl']} groupId="p-clone">
+  <Tab value="clone">
+
+```bash
+p clone https://github.com/heroui-inc/heroui-native-example
+```
+
+  </Tab>
+  <Tab value="cl">
+
+```bash
+p cl heroui-inc/heroui-native-example
+```
+
+  </Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 安装依赖
+
+<Tabs groupId="pkg" items={['pnpm', 'bun', 'npm']} defaultValue="pnpm">
+  <Tab value="pnpm">
+
+```bash
+pnpm install
+```
+
+  </Tab>
+  <Tab value="bun">
+
+```bash
+bun install
+```
+
+  </Tab>
+  <Tab value="npm">
+
+```bash
+npm install
+```
+
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+  不推荐使用 yarn。也可以删除 `package-lock.json`，改用其他包管理器安装。
+</Callout>
+
+</Step>
+<Step>
+
+### 启动项目
+
+<Tabs groupId="pkg" items={['pnpm', 'bun', 'npm']}>
+  <Tab value="pnpm">
+
+```bash
+pnpm run start
+```
+
+  </Tab>
+  <Tab value="bun">
+
+```bash
+bun run start
+```
+
+  </Tab>
+  <Tab value="npm">
+
+```bash
+npm run start
+```
+
+  </Tab>
+</Tabs>
+
+![启动项目](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260509232236630.png)
+
+发现有两个依赖不兼容当前的 expo 版本（测试时为 55）。
+
+</Step>
+<Step>
+
+### 修复依赖
+
+停止 start，自动安装当前 expo 兼容版本：
+
+```bash
+npx expo install react-native react-native-worklets
+```
+
+![修复依赖](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260509232543541.png)
+
+</Step>
+<Step>
+
+### 验证运行
+
+重新 start，然后用 Expo Go 55 扫码测试。
+
+<Callout type="warn">
+  Expo Go 版本必须和当前 expo SDK 版本匹配，否则无法运行。
+</Callout>
+
+一切正常：
+
+<img
+  src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260509233459361.png"
+  alt="运行成功"
+  width="320"
+/>
+
+</Step>
+</Steps>
+
+## 添加为模板
+
+添加当前项目为模板，下次可以从本地快速新建项目（已修复依赖）：
+
+<Tabs items={['tp', 'template', 'templates']} groupId="p-tp">
+  <Tab value="tp">
+
+```bash
+p tp add . heroui-native
+```
+
+  </Tab>
+  <Tab value="template">
+
+```bash
+p template add . heroui-native
+```
+
+  </Tab>
+  <Tab value="templates">
+
+```bash
+p templates add . heroui-native
+```
+
+  </Tab>
+</Tabs>
+
+从模板新建项目：
+
+<Tabs items={['new', 'n', 'create']} groupId="p-new">
+  <Tab value="new">
+
+```bash
+p new my-heroui-native-app -t heroui-native
+```
+
+  </Tab>
+  <Tab value="n">
+
+```bash
+p n my-heroui-native-app -t heroui-native
+```
+
+  </Tab>
+  <Tab value="create">
+
+```bash
+p create my-heroui-native-app -t heroui-native
+```
+
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+  `p new <name>` 可以快速创建项目（放在 `~/.p/projects/` 目录下统一管理），并用配置 IDE 打开（默认 cursor，可 `p config` 配置）。忘记模板名可以 `-t` 留空交互式选择，或 `-t <fuzzy_name>` 模糊搜索。
+</Callout>
