@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-export function CredentialInitializer({ children }: { children: React.ReactNode }) {
+function CredentialInitializerInner({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const hpKey = searchParams.get("hp_key");
   const personalToken = searchParams.get("personal_token");
@@ -21,4 +21,12 @@ export function CredentialInitializer({ children }: { children: React.ReactNode 
   }, [hpKey, personalToken]);
 
   return <>{children}</>;
+}
+
+export function CredentialInitializer({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<>{children}</>}>
+      <CredentialInitializerInner>{children}</CredentialInitializerInner>
+    </Suspense>
+  );
 }
