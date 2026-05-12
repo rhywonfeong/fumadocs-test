@@ -1,0 +1,210 @@
+openapi: 3.1.0
+info:
+  title: Admin API
+  description: API Key 管理接口，支持创建、批量创建、停用和列表查询
+  version: 1.0.0
+
+servers:
+  - url: /
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "通过 `wrangler secret put ADMIN_SECRET` 配置"
+
+  schemas:
+    CreateKeyRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Key 名称
+          example: user-1
+        meta:
+          type: object
+          description: 自定义元数据
+          additionalProperties: true
+          example:
+            plan: pro
+
+    CreateKeyResponse:
+      type: object
+      properties:
+        key:
+          type: string
+          description: "API Key，格式：`hp_` + 48 位十六进制字符"
+          example: hp_a1b2c3d4e5f6789012345678901234567890abcdef12345678
+        active:
+          type: boolean
+          example: true
+        name:
+          type: string
+          example: user-1
+        created:
+          type: string
+          format: date-time
+          example: "2026-05-11T12:00:00.000Z"
+        plan:
+          type: string
+          description: 从 meta.plan 中提取
+          example: pro
+
+    BatchCreateKeyRequest:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 1
+          description: 创建数量
+          example: 5
+        name:
+          type: string
+          description: "可选前缀，实际名称为 `{name}-1`, `{name}-2`, ..."
+          example: team-a
+
+    BatchCreateKeyResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+          example:
+            - hp_a1b2c3d4e5f6...
+            - hp_c3d4e5f6a1b2...
+        count:
+          type: integer
+          example: 5
+
+    DeactivateKeyResponse:
+      type: object
+      properties:
+        deactivated:
+          type: string
+          description: 被停用的 Key
+          example: hp_a1b2c3d4e5f6789012345678901234567890abcdef12345678
+
+    KeyInfo:
+      type: object
+      properties:
+        key:
+          type: string
+          description: "脱敏显示（前 8 位 + `...` + 后 4 位）"
+          example: hp_a1b2c3d4...5678
+        active:
+          type: boolean
+          example: true
+        name:
+          type: string
+          example: user-1
+        created:
+          type: string
+          format: date-time
+          example: "2026-05-11T12:00:00.000Z"
+
+    ListKeysResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyInfo"
+
+paths:
+  /admin/keys:
+    post:
+      summary: 创建 Key
+      description: |
+        创建一个新的 API Key。
+
+        Key 格式：`hp_` + 48 位十六进制字符（24 字节随机数）。
+      operationId: createKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateKeyRequest"
+      responses:
+        "200":
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateKeyResponse"
+        "401":
+          description: 未授权（缺少或无效的 Bearer token）
+
+    get:
+      summary: 列出所有 Key
+      description: |
+        获取所有 API Key 列表。Key 在列表中会脱敏显示（前 8 位 + `...` + 后 4 位）。
+      operationId: listKeys
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListKeysResponse"
+        "401":
+          description: 未授权（缺少或无效的 Bearer token）
+
+  /admin/keys/batch:
+    post:
+      summary: 批量创建 Key
+      description: |
+        批量创建 API Key。
+
+        - `count`：创建数量，上限 100，默认 1
+        - `name`：可选前缀，实际名称为 `{name}-1`, `{name}-2`, ...
+      operationId: batchCreateKeys
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchCreateKeyRequest"
+      responses:
+        "200":
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchCreateKeyResponse"
+        "401":
+          description: 未授权（缺少或无效的 Bearer token）
+
+  /admin/keys/{keyId}:
+    delete:
+      summary: 停用 Key
+      description: |
+        停用（非删除）指定 Key。停用后使用该 Key 的请求会返回 403。
+
+        停用操作将 KV 中的 `active` 设为 `false`，不会删除 KV 记录。
+      operationId: deactivateKey
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: 要停用的 Key ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 停用成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeactivateKeyResponse"
+        "401":
+          description: 未授权（缺少或无效的 Bearer token）

@@ -1,4 +1,17 @@
 {
   "title": "文档",
-  "pages": ["heroui-native-guide", "heroui-native-pro-guide"]
+  "icon": "BookOpen",
+  "pages": [
+    "index",
+    "quick-start",
+    "---指南---",
+    "heroui-native-guide",
+    "heroui-native-pro-guide",
+    "cli-reference",
+    "ci-integration",
+    "---AI 工具---",
+    "...ai-tools",
+    "---安全---",
+    "...security"
+  ]
 }

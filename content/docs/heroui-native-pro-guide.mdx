@@ -1,7 +1,10 @@
 ---
 title: HeroUI Native Pro
 description: 在 HeroUI Native 项目中安装和配置 heroui-native-pro
+icon: Star
 ---
+
+> 本文由人工撰写（md），AI 优化（mdx）。
 
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
@@ -27,7 +30,7 @@ import { HpInstallCommand } from '@/components/hp-install-command';
 
 安装过程会自动处理 react-native 依赖。如果本地已有缓存（`~/.heroui/cache/react-native/{version}`），会从缓存获取；否则从 CDN 下载后缓存。之后再安装时，同一版本会直接走本地缓存，除非手动清除。
 
-![heroui-native-pro 安装过程](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510020113074.png)
+<img src="/images/image-20260510020113074.png" alt="heroui-native-pro 安装过程" loading="eager" />
 
 ## 配置
 
@@ -104,7 +107,7 @@ export default function MyComponent() {
 
 在首页（路径因项目组织方式而异，通常为 `src/app/(home)/index.tsx`）中导入并使用该组件：
 
-![替换首页 View 部分](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510121838448.png)
+![替换首页 View 部分](/images/image-20260510121838448.png)
 
 ```tsx title="src/app/(home)/index.tsx"
 import MyComponent from '@/src/components/my-component';
@@ -145,7 +148,7 @@ npm run start
 </Tabs>
 
 <img
-  src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510122334534.png"
+  src="/images/image-20260510122334534.png"
   alt="Stepper 组件预览效果"
   width="320"
 />
@@ -181,7 +184,7 @@ p templates update .
   </Tab>
 </Tabs>
 
-![更新模板](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510164210559.png)
+![更新模板](/images/image-20260510164210559.png)
 
 ## 发布到远程
 
@@ -211,4 +214,4 @@ p templates publish .
   </Tab>
 </Tabs>
 
-![发布模板到远程](https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/new/image-20260510174539525.png)
+![发布模板到远程](/images/image-20260510174539525.png)

@@ -1,0 +1,6 @@
+{
+  "architecture": "架构概览",
+  "cf-worker": "Cloudflare Worker",
+  "admin-api": "Admin API",
+  "relay": "Relay 服务"
+}

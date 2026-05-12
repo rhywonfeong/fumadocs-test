@@ -1,0 +1,86 @@
+---
+title: 安全审计报告
+description: heroui-pro npm 包的完整安全审计结果
+icon: ShieldCheck
+---
+
+> 本文由 GLM-5-turbo 驱动的 CC 生成，内容基于项目源码与运行时记忆。
+
+## 审计范围
+
+| 包名 | 版本 | 类型 |
+|------|------|------|
+| `heroui-pro` | 1.0.0-beta.9 | CLI 工具 + 认证/CDN/缓存共享库 |
+| `@heroui-pro/react` | 1.0.0-beta.3 | React Pro 组件（空壳，postinstall 下载） |
+| `heroui-native-pro` | 1.0.0-beta.3 | React Native Pro 组件（同上） |
+
+## 核心结论
+
+**未发现第三方遥测 SDK，未发现主动数据窃取行为。** 这是一个付费组件库的商业授权与分发系统。
+
+## 混淆与反混淆
+
+5 个文件使用 RC4 + base64 混淆，共 327 个加密字符串全部自动化解密成功。
+
+已反混淆的文件：
+
+| 文件 | 说明 |
+|------|------|
+| `consts.deobfuscated.js` | 常量定义 |
+| `auth/keyring.deobfuscated.js` | 密钥环操作 |
+| `auth/session.deobfuscated.js` | 会话管理 |
+| `auth/ci.deobfuscated.js` | CI 认证流程 |
+| `cdn/download.deobfuscated.js` | CDN 下载逻辑 |
+
+反混淆结果保存在 `heroui-pro-analysis/` 目录中。
+
+## 隐式追踪机制
+
+虽然没有第三方遥测 SDK，但存在以下隐式追踪能力：
+
+### 1. 项目指纹
+
+每次请求头发送 `X-HeroUI-Project: sha256(projectName).slice(0, 16)`，服务端可据此统计唯一项目数。
+
+### 2. 客户端标识
+
+- `User-Agent: heroui-pro-cli/1.0.0-beta.4`
+- `X-HeroUI-Client-Version` header
+
+### 3. 认证身份
+
+GitHub handle + JWT token 关联每次下载请求，可追踪单个用户的使用模式。
+
+### 4. 动态代码投递
+
+npm 包本身是空壳，实际组件代码通过 postinstall 从远端服务器拉取。这意味着：
+- 无法通过 npm 版本锁定来固定代码
+- 每次安装的实际代码可能不同
+- 上游可以随时更改分发的代码内容
+
+## 外部通信
+
+| 目标 | 用途 | 认证信息 |
+|------|------|---------|
+| `api.heroui.pro` | 认证、CDN 下载 | GitHub token / CI token |
+| `registry.npmjs.org` | 版本检查 | 无（3 秒超时） |
+| GitHub OAuth | SSE 回调 | GitHub OAuth token |
+
+## 本地存储
+
+| 路径 | 内容 | 权限 |
+|------|------|------|
+| `~/.config/heroui-pro/credentials.json` | GitHub handle + JWT | 0600 |
+| 系统密钥环 (libsecret) | 同上（如可用则优先） | — |
+| `~/.heroui/cache/<slug>/<version>/` | 组件缓存 | — |
+
+凭据文件使用 0600 权限（仅所有者可读写）。
+
+## 风险评估
+
+| 风险 | 级别 | 说明 |
+|------|------|------|
+| 动态代码投递 | 中 | npm 包为空壳，实际代码由上游控制 |
+| 项目指纹追踪 | 低 | 仅发送项目名哈希，非用户身份信息 |
+| 认证关联 | 低 | 使用 GitHub 身份，对付费产品属于正常行为 |
+| 本地凭据存储 | 低 | 使用标准 0600 权限 + 系统密钥环 |

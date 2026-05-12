@@ -1,9 +1,11 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata } from "next";
+import { CredentialInitializer } from "@/components/credential-initializer";
 import "./global.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://collectui.youquxing.com"),
+  metadataBase: new URL("https://collectui.vercel.app"),
+  icons: "/logo.png",
 };
 
 export default function Layout({ children }: LayoutProps<"/">) {
@@ -22,7 +24,9 @@ export default function Layout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="flex flex-col min-h-screen font-sans">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider>
+          <CredentialInitializer>{children}</CredentialInitializer>
+        </RootProvider>
       </body>
     </html>
   );

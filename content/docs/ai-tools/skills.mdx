@@ -1,0 +1,115 @@
+---
+title: "Agent Skills"
+description: "为 AI 工具安装 HeroUI Pro 技能包，让代理从开始就写出高质量代码。"
+icon: "Sparkles"
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { SkillsInstallCommand } from '@/components/skills-install-command';
+import { Suspense } from 'react';
+
+> 本文由 GLM-5.1 驱动的 CC 参考官方文档生成。
+
+HeroUI Pro 提供 **Skills（技能包）**，是教 AI 代理正确使用 Pro 组件的知识库。包含组件模式、API 约定和设计原则。
+
+Skills 是缓存的知识，离线可用，代理启动时自动加载。与 [MCP 服务器](/docs/ai-tools/mcp) 实时数据配合使用效果最佳。
+
+---
+
+## 安装
+
+<Tabs items={["react", "native", "design"]}>
+  <Tab value="react">
+    `@heroui-pro/react` — 图表、高级表单、导航、浮层、数据展示，共 55 个组件。
+
+    <Suspense>
+      <SkillsInstallCommand skill="heroui-react-pro" />
+    </Suspense>
+  </Tab>
+
+  <Tab value="native">
+    `heroui-native-pro` — 日期选择器、步进器、进度按钮、滑动按钮、数字输入框，共 30 个组件。
+
+    <Suspense>
+      <SkillsInstallCommand skill="heroui-native-pro" />
+    </Suspense>
+  </Tab>
+
+  <Tab value="design">
+    `heroui-pro-design-taste` — 78 条设计原则，覆盖 10 个分类，适用于所有 HeroUI 包。
+
+    <Suspense>
+      <SkillsInstallCommand skill="heroui-pro-design-taste" />
+    </Suspense>
+  </Tab>
+</Tabs>
+
+<Callout type="warn">
+  Skills 使用的是 **Personal Token**，不是 hpsetup 的 HP Key，两者是不同的认证体系，请勿混用。
+</Callout>
+
+---
+
+## 支持的 AI 工具
+
+安装脚本会自动检测已安装的工具并安装到对应目录：
+
+| AI 工具 | 安装路径 |
+|---|---|
+| Claude Code | `~/.claude/skills/{skill-name}/` |
+| Cursor | `~/.cursor/skills/{skill-name}/` |
+| Codex CLI | `~/.codex/skills/{skill-name}/` |
+| OpenCode | `~/.config/opencode/skill/{skill-name}/` |
+| Antigravity (Gemini) | `~/.gemini/antigravity/skills/{skill-name}/` |
+
+<Callout type="info">
+  如果没有检测到已安装的 AI 工具，脚本会输出下载链接。也可以设置 `HEROUI_PRO_SKILLS_DIR` 安装到自定义路径。
+</Callout>
+
+---
+
+## 技能包详情
+
+### heroui-react-pro
+
+`@heroui-pro/react` 的复合组件模式、MCP 工具用法和 CSS 样式系统。
+
+**覆盖范围：**
+- 图表：AreaChart、BarChart、LineChart、PieChart、RadarChart、ComposedChart
+- 数据展示：KPI、KPIGroup、TrendChip、NumberValue、Rating、EmptyState
+- 表单：CellSelect、CellSwitch、CellSlider、InlineSelect、NativeSelect、NumberStepper
+- 导航：Sidebar、FloatingToc、Stepper、Segment
+- 浮层：Command、ContextMenu、HoverCard、Sheet
+- 反馈：PressableFeedback、DropZone、EmojiPicker
+- 布局：FileTree、Kanban、ItemCard
+
+### heroui-native-pro
+
+`heroui-native-pro` 的复合组件模式、Uniwind 样式和 Reanimated 约定。
+
+**覆盖范围：**
+- 日期时间：DatePicker、DateRangePicker、RangeCalendar、Calendar
+- 表单：NumberField、NumberStepper、RadioButtonGroup
+- 按钮：ProgressButton、SlideButton、ToggleButton、SocialAuthButton、ToggleButtonGroup
+- 导航：Stepper、Segment、SplitView
+- 数据展示：NumberValue、Rating、ProgressBar、ProgressCircle、EmptyState、Badge
+- 图表：AreaChart、BarChart、LineChart
+
+### heroui-pro-design-taste
+
+78 条设计原则，覆盖 10 个分类，适用于所有 HeroUI 包。
+
+**分类：** 间距、排版、颜色、卡片、表单、按钮、图标、导航、布局、无障碍。
+
+---
+
+## 卸载
+
+删除对应目录即可：
+
+```bash
+rm -rf ~/.claude/skills/heroui-react-pro
+rm -rf ~/.claude/skills/heroui-native-pro
+rm -rf ~/.claude/skills/heroui-pro-design-taste
+```

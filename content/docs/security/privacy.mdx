@@ -1,0 +1,69 @@
+---
+title: 隐私与数据收集
+description: hpsetup 及其依赖的数据收集行为说明
+icon: Shield
+---
+
+> 本文由 GLM-5-turbo 驱动的 CC 生成，内容基于项目源码与运行时记忆。
+
+## hpsetup 本身
+
+hpsetup CLI 工具**不主动收集任何用户数据**。它是一个纯粹的安装工具，职责是下载和安装 HeroUI Pro 组件。
+
+hpsetup 的所有外部通信：
+
+| 目标 | 请求 | 发送的数据 |
+|------|------|-----------|
+| `hpsetup-cdn.932324.xyz` | GET `/api/tarball/...` | API Key |
+| `registry.npmjs.org` | GET `/{package}/latest` | 无认证信息 |
+
+### API Key 用途
+
+API Key 仅用于 CF Worker 的认证，以验证用户是否有权下载 tarball。Key 的格式为 `hp_` + 48 位十六进制字符，由管理员通过 Admin API 创建。
+
+## 上游依赖（heroui-pro）
+
+hpsetup 安装的 `heroui-pro` 包（npm 空壳）在 postinstall 阶段会与上游 `api.heroui.pro` 通信。以下数据收集行为来自上游，不属于 hpsetup 本身：
+
+### 收集的数据
+
+| 数据 | 来源 | 用途 |
+|------|------|------|
+| GitHub handle | OAuth 认证 | 用户身份识别与授权 |
+| JWT token | 认证响应 | 会话管理 |
+| 项目名哈希 | `package.json` 的 `name` 字段 | 唯一项目统计 |
+| CLI 版本 | User-Agent header | 版本分布统计 |
+
+### 不收集的数据
+
+- 源代码内容
+- 文件系统结构（除 `package.json` 的 `name`）
+- 环境变量
+- 系统信息
+
+## 缓存与本地存储
+
+| 存储 | 内容 | 位置 |
+|------|------|------|
+| tarball 缓存 | 组件压缩包 | `~/.heroui/cache/` |
+| 凭据 | GitHub handle + JWT | `~/.config/heroui-pro/credentials.json` |
+| 凭据（备选） | 同上 | 系统密钥环 (libsecret) |
+
+所有凭据文件使用 0600 权限。清除缓存和凭据：
+
+```bash
+rm -rf ~/.heroui/cache
+rm -rf ~/.config/heroui-pro
+```
+
+## 网络请求汇总
+
+一次完整的 hpsetup 安装流程涉及的网络请求：
+
+```
+1. CLI → registry.npmjs.org        版本检查（无认证）
+2. CLI → hpsetup-cdn.932324.xyz   下载 tarball（API Key 认证）
+3. [可选] heroui-pro → api.heroui.pro  postinstall 认证（上游行为）
+```
+
+步骤 3 仅在 `heroui-pro` 包的 postinstall 脚本执行时发生，属于上游包的独立行为。

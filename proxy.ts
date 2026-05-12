@@ -12,6 +12,11 @@ const { rewrite: rewriteSuffix } = rewritePath(
 );
 
 export default function proxy(request: NextRequest) {
+  // Preserve query params when root redirects to /docs
+  if (request.nextUrl.pathname === '/' && request.nextUrl.search) {
+    return NextResponse.redirect(new URL(`/docs${request.nextUrl.search}`, request.url));
+  }
+
   const result = rewriteSuffix(request.nextUrl.pathname);
   if (result) {
     return NextResponse.rewrite(new URL(result, request.nextUrl));

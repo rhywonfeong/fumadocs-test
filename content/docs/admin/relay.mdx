@@ -1,0 +1,72 @@
+---
+title: Relay 服务
+description: Relay 服务器部署、challenge 流程与备份机制
+---
+
+> 本文由 GLM-5-turbo 驱动的 CC 生成，内容基于项目源码与运行时记忆。
+
+Relay 是位于 CF Worker 和上游 CDN 之间的中间代理服务，负责模拟官方 CLI 从 `api.heroui.pro` 获取 tarball。
+
+## 部署
+
+Relay 运行为 systemd 服务：
+
+```bash
+sudo systemctl restart mcp-relay
+sudo systemctl status mcp-relay
+```
+
+- 服务名：`mcp-relay`
+- 端口：`8901`
+- 源码位置：`/home/ubuntu/dev/heroui-pro-components/relay/server.py`
+
+## 工作流程
+
+Relay 模拟官方 CLI（User-Agent: `heroui-pro-cli/1.0.0-beta.4`）通过 challenge 流程获取 tarball：
+
+```
+1. POST /ci/challenge     → 获取一次性 token
+2. GET  /download/{token}  → 使用 token 下载 tarball
+3. GET  /ci/{version}/{token}  → Fallback 下载方式
+```
+
+## 对外接口
+
+Relay 仅接受来自 CF Worker 的请求，通过 `x-relay-secret` header 认证：
+
+```http
+GET /tarball/:product/:version[?nocache=1]
+x-relay-secret: hp-relay-2026
+```
+
+| 参数 | 说明 |
+|------|------|
+| `:product` | `react` 或 `react-native` |
+| `:version` | 版本号 |
+| `nocache=1` | 可选，强制从上游重新拉取 |
+
+响应头：
+
+| Header | 说明 |
+|--------|------|
+| `x-source` | 来源标识（`relay` 或 `backup`） |
+| `Content-Type` | `application/gzip` |
+
+## 备份机制
+
+每次成功拉取的 tarball 都会永久备份到本地文件系统：
+
+```
+/home/ubuntu/dev/heroui-pro-components/backup/tarballs/
+```
+
+当上游 CDN 不可用时，Relay 会从本地备份返回 tarball（此时 `x-source` 为 `backup`）。
+
+## 认证
+
+```
+CF Worker → Relay:  x-relay-secret header
+Relay → 上游:       ?token=xxx (CI_TOKEN, challenge 流程)
+```
+
+Relay 不直接暴露公网，仅接受来自 CF Worker 的请求。

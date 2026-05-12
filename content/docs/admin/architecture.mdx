@@ -1,0 +1,86 @@
+---
+title: 架构概览
+description: hpsetup 全链路架构：CLI → CF Worker → Relay → 上游 CDN
+---
+
+> 本文由 GLM-5-turbo 驱动的 CC 生成，内容基于项目源码与运行时记忆。
+
+## 请求链路
+
+```
+用户 CLI (hpsetup)
+  │  HTTPS  ?key=hp_xxxx
+  ▼
+CF Worker (hpsetup-cdn.932324.xyz)
+  │  用户认证 + R2 缓存 + 全局限流 + Admin API
+  │  HTTP  x-relay-secret
+  ▼
+Relay (relay.932324.xyz:8901)
+  │  CI_TOKEN + Challenge→Download + 永久备份
+  │  HTTPS
+  ▼
+上游 CDN (api.heroui.pro)
+  官方 heroui-pro 分发
+```
+
+## 各组件职责
+
+### CLI (`hpsetup`)
+
+- npm 包：`hpsetup`
+- 入口：`bin.js` → `src/install.js`
+- 职责：交互式安装、包发现、版本管理、peer 依赖处理、本地缓存、Vercel 集成、pnpm/bun trust patch
+- 依赖：`@clack/prompts`, `chalk`, `find-up`, `semver`, `tar`
+
+### Cloudflare Worker
+
+- Wrangler 项目名：`hpsetup`
+- 默认域名：`hpsetup.janaherman.workers.dev`
+- 自定义域名：`hpsetup-cdn.932324.xyz`
+- 职责：API Key 认证、R2 tarball 缓存、全局限流、Admin API、健康检查
+
+### Relay
+
+- systemd 服务：`mcp-relay`，端口 8901
+- 模拟官方 CLI（UA: `heroui-pro-cli/1.0.0-beta.4`）
+- 流程：POST `/ci/challenge` → GET `/download/{token}` → Fallback GET `/ci/{version}/{token}`
+- 备份目录：`/home/ubuntu/dev/heroui-pro-components/backup/tarballs/`
+
+## 认证层级
+
+```
+CLI → CF Worker:    ?key=hp_xxxx          (KV KEYS 存储)
+CF Worker → Relay:  x-relay-secret header  (共享密钥)
+Relay → 上游:       ?token=xxx             (CI_TOKEN, challenge 流程)
+Admin:              Bearer token           (ADMIN_SECRET)
+```
+
+每一层使用独立的认证机制，互不共享凭据。
+
+## 数据流
+
+1. 用户运行 `npx hpsetup@latest hp_xxxx`
+2. CLI 检查本地缓存 → 检查 npm registry 最新版本 → 向 CF Worker 请求 tarball
+3. CF Worker 验证 API Key → 查 R2 缓存 → 缓存未命中时转发到 Relay
+4. Relay 模拟官方 CLI 通过 challenge 流程从上游 CDN 获取 tarball
+5. tarball 沿链路返回：Relay → CF Worker（存入 R2）→ CLI（解压安装 + 安装 peer 依赖）
+
+## 缓存策略
+
+| 层级 | 存储 | Key 格式 | 作用 |
+|------|------|---------|------|
+| CLI 本地 | `~/.heroui/cache/` | `<product>/<version>/` | 同版本避免重复下载 |
+| CF Worker | Cloudflare R2 `hp-tarballs` | `<product>/<version>` | 全局 CDN 缓存 |
+| Relay | 本地文件系统 | `<product>/<version>.tar.gz` | 永久备份 |
+
+## 限流
+
+`--no-cache` 请求（绕过所有缓存直连源站）受全局每日限制：
+
+- 默认：每天最多 1 次
+- 使用 KV 存储 `nocache:{date}`，TTL 48 小时
+- 超限时返回 HTTP 429
+
+## 健康检查
+
+CF Worker 提供 `/health` 端点，返回 `{"status":"ok"}`。

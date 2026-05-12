@@ -1,0 +1,115 @@
+---
+title: Cloudflare Worker
+description: CF Worker 部署配置、环境变量、缓存与限流
+---
+
+> 本文由 GLM-5-turbo 驱动的 CC 生成，内容基于项目源码与运行时记忆。
+
+## 部署
+
+```bash
+cd cf-worker
+wrangler deploy
+```
+
+## 配置
+
+`wrangler.toml`:
+
+```toml
+name = "hpsetup"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[observability.logs]
+enabled = true
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "hp-tarballs"
+
+[[kv_namespaces]]
+binding = "KEYS"
+id = "b9b7f30dd70c439ea4d36548d764421b"
+```
+
+## 环境变量
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `ADMIN_SECRET` | Admin API Bearer token | 通过 `wrangler secret put ADMIN_SECRET` 设置 |
+| `RELAY_SECRET` | CF Worker → Relay 认证密钥 | 默认 `hp-relay-2026` |
+
+创建 `.dev.vars` 文件用于本地开发：
+
+```
+ADMIN_SECRET=your-admin-secret
+RELAY_SECRET=hp-relay-2026
+```
+
+参考 `.dev.vars.example`。
+
+## Cloudflare 资源
+
+| 资源 | 名称 | ID |
+|------|------|----|
+| Account | feng | `775d071168ed6bc87bfb62426734eaa7` |
+| Zone | 932324.xyz | `a9c8e5bad1212446a047f844c49fd74b` |
+| R2 Bucket | hp-tarballs | — |
+| KV Namespace | KEYS | `b9b7f30dd70c439ea4d36548d764421b` |
+
+## API 端点
+
+### `GET /api/tarball/:product/:version?key=xxx`
+
+获取 tarball。
+
+| 参数 | 说明 |
+|------|------|
+| `:product` | `react` 或 `react-native` |
+| `:version` | 版本号 |
+| `key` | 用户 API Key |
+| `nocache=1` | 可选，绕过 R2 缓存直连 Relay（受频率限制） |
+
+响应头：
+
+| Header | 说明 |
+|--------|------|
+| `X-Cache` | `HIT`（R2 缓存）、`MISS`（首次拉取）、`REFRESH`（nocache 拉取） |
+| `X-Source` | tarball 来源标识 |
+| `Content-Type` | `application/gzip` |
+
+### `GET /health`
+
+健康检查，返回 `{"status":"ok"}`。
+
+### `/admin/*`
+
+管理 API，详见 [Admin API](/docs/admin/admin-api)。
+
+## 限流规则
+
+`nocache=1` 请求受全局每日限制（默认 1 次/天）。超限时返回：
+
+```json
+{
+  "error": "Source fetch limit reached for today.",
+  "hint": "--no-cache bypasses all caches to pull from source. Usage is rate-limited.",
+  "code": "RATE_LIMITED"
+}
+```
+
+计数存储在 KV `nocache:{YYYY-MM-DD}`，TTL 48 小时。
+
+## 源码结构
+
+```
+cf-worker/src/
+├── index.ts      # 主入口，路由分发
+├── types.ts      # TypeScript 类型定义
+├── constants.ts  # 常量（产品映射、Relay URL、限流阈值）
+├── keys.ts       # API Key 验证与生成
+├── relay.ts      # Relay 请求客户端
+├── ratelimit.ts  # nocache 频率限制
+└── admin.ts      # Admin API 端点
+```

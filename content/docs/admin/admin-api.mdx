@@ -1,0 +1,28 @@
+---
+title: Admin API
+description: API Key 管理接口，支持创建、批量创建、停用和列表查询
+---
+
+Admin API 位于 `/admin` 路径下，所有请求需携带 Bearer token 认证。
+
+## 认证
+
+```
+Authorization: Bearer <ADMIN_SECRET>
+```
+
+`ADMIN_SECRET` 通过 `wrangler secret put ADMIN_SECRET` 配置。
+
+## 接口
+
+<APIPage />
+
+## KV 存储结构
+
+Key 存储在 Cloudflare KV 中，格式为：
+
+```
+key:hp_a1b2c3d4e5f6... → {"active": true, "name": "user-1", "created": "..."}
+```
+
+停用操作将 `active` 设为 `false`，不会删除 KV 记录。
