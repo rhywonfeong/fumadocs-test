@@ -11,7 +11,7 @@ export async function APIPage(props: Record<string, unknown>) {
   const schema = schemas[docId];
   if (!schema) return null;
 
-  const operations: Array<{ path: string; method: string }> = [];
+  const operations: Array<{ path: string; method: typeof HTTP_METHODS[number] }> = [];
   for (const [path, pathItem] of Object.entries(
     (schema.dereferenced as { paths?: Record<string, Record<string, unknown>> }).paths ?? {},
   )) {

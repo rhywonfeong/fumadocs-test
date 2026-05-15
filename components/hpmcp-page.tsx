@@ -2,63 +2,33 @@
 
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { useCredentials } from "@/lib/credentials";
 
 type Variant = "react" | "native";
 
-const V: Record<Variant, { name: string; url: string; label: string; desc: string }> = {
+const V: Record<Variant, { name: string; label: string; desc: string }> = {
   react: {
     name: "heroui-pro",
-    url: "https://hp-mcp-proxy.932324.xyz/mcp",
     label: "React Pro",
     desc: "图表、高级表单、导航、浮层、数据展示",
   },
   native: {
     name: "heroui-native-pro",
-    url: "https://hp-native-mcp-proxy.932324.xyz/mcp",
     label: "Native Pro",
     desc: "日期选择器、步进器、进度按钮、数字输入框",
   },
 };
 
-const TOOLS: Record<Variant, { name: string; desc: string }[]> = {
-  react: [
-    { name: "list_components", desc: "按分类列出所有组件" },
-    { name: "get_component_docs", desc: "获取完整文档：结构、复合 API、Props、示例" },
-    { name: "get_css", desc: "CSS 系统：设计令牌、组件 BEM 样式、主题变量" },
-    { name: "get_docs", desc: "指南：安装、主题、样式、组合、动画" },
-  ],
-  native: [
-    { name: "list_components", desc: "按分类列出所有组件" },
-    { name: "get_component_docs", desc: "获取完整文档：结构、复合 API、Props、示例" },
-    { name: "get_docs", desc: "指南：安装、主题、样式、组合、动画" },
-  ],
-};
-
-const EXAMPLES: Record<Variant, string[]> = {
-  react: [
-    "用 Sidebar、CellSwitch 开关、CellSelect 下拉和 CellSlider 构建一个设置页",
-    "创建一个仪表盘，包含 KPI 卡片、TrendChip 和 AreaChart 展示周收入",
-    "查看 Sheet 组件的 BEM class，我想自定义 overlay 和 content 的样式",
-  ],
-  native: [
-    "用 Stepper 组件构建一个三步注册流程",
-    "创建一个带 DatePicker 和 NumberField 的表单",
-    "ProgressButton 和 SlideButton 有什么区别？各给一个示例",
-  ],
-};
-
-function json(v: Variant, token: string, key = "mcpServers") {
+function json(v: Variant, token: string) {
   return JSON.stringify(
     {
-      [key]: {
+      mcpServers: {
         [V[v].name]: {
-          type: "http",
-          url: V[v].url,
-          headers: { "x-heroui-personal-token": token },
+          type: "stdio",
+          command: "npx",
+          args: ["-y", "hpmcp@latest", v, token],
         },
       },
     },
@@ -69,15 +39,16 @@ function json(v: Variant, token: string, key = "mcpServers") {
 
 function toml(v: Variant, token: string) {
   return `[mcp_servers.${V[v].name}]
-url = "${V[v].url}"
-http_headers = { "x-heroui-personal-token" = "${token}" }`;
+type = "stdio"
+command = "npx"
+args = ["-y", "hpmcp@latest", "${v}", "${token}"]`;
 }
 
 function cli(v: Variant, token: string) {
-  return `claude mcp add -s user --transport http ${V[v].name} ${V[v].url} --header "x-heroui-personal-token: ${token}"`;
+  return `claude mcp add -s user -t stdio ${V[v].name} -- npx -y hpmcp@latest ${v} ${token}`;
 }
 
-export function McpPage() {
+export function HpmcpPage() {
   const [v, setV] = useState<Variant>("react");
   const { personalToken, ready } = useCredentials();
 
@@ -121,7 +92,7 @@ export function McpPage() {
           </p>
           <DynamicCodeBlock
             lang="json"
-            code={json(v, token, "mcpServers")}
+            code={json(v, token)}
             codeblock={{ title: ".cursor/mcp.json" }}
           />
           <p>
@@ -140,7 +111,7 @@ export function McpPage() {
           </p>
           <DynamicCodeBlock
             lang="json"
-            code={json(v, token, "mcpServers")}
+            code={json(v, token)}
             codeblock={{ title: ".mcp.json" }}
           />
           <p>
@@ -153,7 +124,7 @@ export function McpPage() {
           </p>
           <DynamicCodeBlock
             lang="json"
-            code={json(v, token, "servers")}
+            code={json(v, token)}
             codeblock={{ title: ".vscode/mcp.json" }}
           />
           <p>打开文件并点击 Start。</p>
@@ -164,7 +135,7 @@ export function McpPage() {
           </p>
           <DynamicCodeBlock
             lang="json"
-            code={json(v, token, "mcpServers")}
+            code={json(v, token)}
             codeblock={{ title: ".windsurf/mcp.json" }}
           />
           <p>重启 Windsurf 生效。</p>
@@ -175,7 +146,7 @@ export function McpPage() {
           </p>
           <DynamicCodeBlock
             lang="json"
-            code={json(v, token, "context_servers")}
+            code={json(v, token)}
             codeblock={{ title: "settings.json" }}
           />
           <p>重启后检查 Agent Panel 中的绿色连接指示器。</p>
@@ -196,68 +167,53 @@ export function McpPage() {
         </Tab>
       </Tabs>
 
-      {/* 可用工具 */}
+      {/* 可选配置 */}
       <div>
-        <h2 className="text-xl font-semibold mb-3">可用工具</h2>
+        <h2 className="text-xl font-semibold mb-3">可选配置</h2>
         <table>
           <thead>
             <tr>
-              <th>工具</th>
+              <th>环境变量</th>
+              <th>默认值</th>
               <th>说明</th>
             </tr>
           </thead>
           <tbody>
-            {TOOLS[v].map((tool) => (
-              <tr key={tool.name}>
-                <td><code>{tool.name}</code></td>
-                <td>{tool.desc}</td>
-              </tr>
-            ))}
+            <tr>
+              <td><code>CACHE_TTL</code></td>
+              <td><code>1800</code></td>
+              <td>缓存有效期（秒）</td>
+            </tr>
           </tbody>
         </table>
-
-        {v === "react" && (
-          <>
-            <p className="mt-4">
-              <code>get_css</code> 支持三种模式：
-            </p>
-            <ul>
-              <li><code>get_css()</code> — 基础设计令牌 + 可用样式和主题列表</li>
-              <li><code>get_css(&#123; components: [&quot;sheet&quot;, &quot;sidebar&quot;] &#125;)</code> — 指定组件的 BEM CSS</li>
-              <li><code>get_css(&#123; theme: &quot;brutalism&quot; &#125;)</code> — 完整主题变量（含字体和覆盖）</li>
-            </ul>
-          </>
-        )}
+        <DynamicCodeBlock
+          lang="json"
+          code={JSON.stringify(
+            {
+              type: "stdio",
+              command: "npx",
+              args: ["-y", "hpmcp@latest", v, token],
+              env: { CACHE_TTL: "3600" },
+            },
+            null,
+            2,
+          )}
+          codeblock={{ title: "示例：自定义缓存时间" }}
+        />
+        <p className="mt-3">
+          清除缓存：<code>rm -rf ~/.hpmcp/cache</code>
+        </p>
       </div>
 
-      {/* 示例提示词 */}
+      {/* 特性 */}
       <div>
-        <h2 className="text-xl font-semibold mb-3">示例提示词</h2>
-        <div className="flex flex-col gap-6">
-          {EXAMPLES[v].map((ex, i) => (
-            <DynamicCodeBlock
-              key={i}
-              lang="text"
-              code={ex}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* 故障排除 */}
-      <div>
-        <h2 className="text-xl font-semibold mb-3">故障排除</h2>
-        <Accordions type="single">
-          <Accordion title="无法连接" id="not-connecting">
-            Pro MCP 使用 HTTP 传输，无需 Node.js。确认 MCP URL 可达，并在编辑器设置中启用了连接。
-          </Accordion>
-          <Accordion title="认证错误" id="auth-error">
-            检查配置中 <code>headers</code> 字段的 <code>x-heroui-personal-token</code>。CI/CD Token（<code>HEROUI_AUTH_TOKEN</code>）仅用于自动化，编辑器 MCP 应使用 Personal Token。
-          </Accordion>
-          <Accordion title="工具未被调用" id="tools-not-called">
-            在提示词中明确指定："使用 HeroUI Pro MCP 查看 Sheet 组件 API" 或 "查一下 Command 组件结构"。
-          </Accordion>
-        </Accordions>
+        <h2 className="text-xl font-semibold mb-3">特性</h2>
+        <ul>
+          <li><strong>零配置</strong> — 上游地址内置，添加配置即可使用</li>
+          <li><strong>自动缓存</strong> — 响应缓存到本地，重复请求无需联网</li>
+          <li><strong>离线可用</strong> — 上游不可用时自动降级到缓存数据</li>
+          <li><strong>零依赖</strong> — 纯 Node.js，安装体积极小</li>
+        </ul>
       </div>
     </div>
   );

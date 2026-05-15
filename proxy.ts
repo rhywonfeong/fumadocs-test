@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { isMarkdownPreferred, rewritePath } from 'fumadocs-core/negotiation';
-import { docsContentRoute, docsRoute } from '@/lib/shared';
+import { isMarkdownPreferred, rewritePath } from "fumadocs-core/negotiation";
+import { type NextRequest, NextResponse } from "next/server";
+import { docsContentRoute, docsRoute } from "@/lib/shared";
+
+const OLD_DOMAIN = "collectui.vercel.app";
+const NEW_DOMAIN = "collectui.youquxing.com";
 
 const { rewrite: rewriteDocs } = rewritePath(
   `${docsRoute}{/*path}`,
@@ -12,9 +15,27 @@ const { rewrite: rewriteSuffix } = rewritePath(
 );
 
 export default function proxy(request: NextRequest) {
+  const host = request.headers.get("host") ?? "";
+
+  if (host === OLD_DOMAIN) {
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    url.hostname = NEW_DOMAIN;
+    url.port = "";
+
+    const noticeUrl = request.nextUrl.clone();
+    noticeUrl.pathname = "/migrate";
+
+    const response = NextResponse.rewrite(noticeUrl);
+    response.headers.set("X-New-Location", url.toString());
+    return response;
+  }
+
   // Preserve query params when root redirects to /docs
-  if (request.nextUrl.pathname === '/' && request.nextUrl.search) {
-    return NextResponse.redirect(new URL(`/docs${request.nextUrl.search}`, request.url));
+  if (request.nextUrl.pathname === "/" && request.nextUrl.search) {
+    return NextResponse.redirect(
+      new URL(`/docs${request.nextUrl.search}`, request.url),
+    );
   }
 
   const result = rewriteSuffix(request.nextUrl.pathname);

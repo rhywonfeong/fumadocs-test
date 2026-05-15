@@ -4,7 +4,7 @@ import { CredentialInitializer } from "@/components/credential-initializer";
 import "./global.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://collectui.vercel.app"),
+  metadataBase: new URL("https://collectui.youquxing.com"),
   icons: "/logo.png",
 };
 

@@ -1,0 +1,116 @@
+---
+title: Native EAS 部署
+description: 使用 EAS Build 构建 HeroUI Native Pro 的 Android 安装包
+icon: Hammer
+---
+
+> 本文由人工撰写（md），AI 优化（mdx）。
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Suspense } from 'react';
+import { HpInstallCommand } from '@/components/hp-install-command';
+
+<Callout type="info">
+本指南基于已完成的 [HeroUI Native Pro 安装](/docs/heroui-native-pro-guide)，请先完成基础安装和配置。
+</Callout>
+
+## 配置 preinstall 脚本
+
+切换到 `apps/native/`，在 `package.json` 中新增一个 `preinstall` 脚本：
+
+<Steps>
+<Step>
+
+### 添加 preinstall 脚本
+
+```json title="apps/native/package.json"
+{
+  "scripts": {
+    "preinstall": "npx -y hpsetup@latest <your_hp_key>"
+  }
+}
+```
+
+<Callout type="info">
+这一步会确保在依赖安装前运行 hpsetup，提前完成所有依赖的完整安装，然后移除 pro 包的 postinstall（让后续的 install 正常通过，不报依赖构建错误）。
+
+如果需要体验最新的内测实现，可以把 `latest` 换成 `beta`。
+</Callout>
+
+</Step>
+<Step>
+
+### 配置 EAS
+
+新增 `eas.json` 文件：
+
+```json title="apps/native/eas.json"
+{
+  "cli": {
+    "version": ">= 18.13.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
+```
+
+新增 `.nvmrc`，指定 Node 版本为 22（pnpm 11 需要此版本，否则会报错）：
+
+```bash title="apps/native/.nvmrc"
+22
+```
+
+</Step>
+<Step>
+
+### 执行构建
+
+```bash
+npx -y --package eas-cli eas build -p android -e preview
+```
+
+临时装一个 eas-cli 包，然后执行其中的 eas 命令，使用 preview profile 运行 Android 端的构建。
+
+成功构建：
+
+<img src="/images/image-20260515235024275.png" alt="EAS 构建成功" />
+
+安装 APK 后运行：
+
+<img src="/images/image-20260515235557648.png" alt="APK 安装运行" width="320" />
+
+</Step>
+</Steps>
+
+## Tips
+
+### ERR_PNPM_IGNORED_BUILDS
+
+如果遇到 `ERR_PNPM_IGNORED_BUILDS` 问题，需要把相应的依赖加入 trust 列表（允许依赖的构建脚本执行）：
+
+<img src="/images/image-20260515231451175.png" alt="ERR_PNPM_IGNORED_BUILDS 错误" />
+
+<Callout type="info">
+仅示例，此依赖已纳入 hpsetup trust 列表。
+</Callout>
+
+### Expo 官方插件
+
+需要辅助 Expo 开发的话，可以安装官方的插件：
+
+<img src="/images/image-20260515172120970.png" alt="Expo 官方插件" />
